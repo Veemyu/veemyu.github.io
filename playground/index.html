@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Münzwurf Zähler</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        user-select: none; /* Prevent text selection */
+        -webkit-user-select: none; /* Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE 10+ */
+        touch-action: manipulation; /* Disable double-tap zoom */
+    }
+    .container {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        width: 300px;
+        margin-bottom: 20px;
+    }
+    .count {
+        font-size: 24px;
+        text-align: center;
+    }
+    .controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: auto;
+    }
+    .sum {
+        font-size: 20px;
+        margin-top: 10px;
+    }
+    .button-group {
+        display: flex;
+        margin-top: 10px;
+    }
+    .button {
+        display: inline-block;
+        padding: 20px 40px;
+        font-size: 24px;
+        cursor: pointer;
+        border-radius: 10px;
+        margin-top: 10px;
+    }
+    #resetButton {
+        font-size: 20px;
+        padding: 15px 30px;
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
+    #shiftButton {
+        margin-bottom: 20px;
+        background-color: lightgray;
+    }
+    #leftButton {
+        margin-right: 10px;
+        padding: 40px 80px; /* Double the size */
+        font-size: 72px; /* Triple the size */
+    }
+    #rightButton {
+        margin-left: 10px;
+        padding: 40px 80px; /* Double the size */
+        font-size: 72px; /* Triple the size */
+    }
+    footer {
+        margin-top: auto;
+        text-align: center;
+    }
+    footer button {
+        margin-top: 20px;
+    }
+    .explanation {
+        text-align: center;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="heads">
+        <h2>Nadel</h2>
+        <div class="count" id="headsCount">0</div>
+    </div>
+    <div class="tails">
+        <h2>Kopf</h2>
+        <div class="count" id="tailsCount">0</div>
+    </div>
+</div>
+
+<div class="sum" id="totalCount">Summe: 0</div>
+
+<div class="controls">
+    <div class="button-group">
+        <button id="shiftButton" class="button">Shift</button>
+    </div>
+    <div class="button-group">
+        <button id="leftButton" class="button">←</button>
+        <button id="rightButton" class="button">→</button>
+    </div>
+    <p class="explanation">Drücke die Shift-Taste und benutze die Pfeiltasten zum Subtrahieren</p>
+</div>
+
+<div class="controls">
+    <label for="maxTotalValue">Versuchsmenge: </label>
+    <input type="number" id="maxTotalValue" value="200">
+</div>
+
+<footer>
+    <button id="resetButton">Reset</button>
+    <p>2024 - Made by Fabio & GPT</p>
+</footer>
+
+<script>
+    let headsCount = 0;
+    let tailsCount = 0;
+    let shiftPressed = false;
+    let leftPressed = false;
+    let rightPressed = false;
+    let leftCooldown = false;
+    let rightCooldown = false;
+
+    function updateSum() {
+        const total = headsCount + tailsCount;
+        document.getElementById('totalCount').innerText = `Summe: ${total}`;
+        return total;
+    }
+
+    function updateCounts() {
+        document.getElementById('headsCount').innerText = headsCount;
+        document.getElementById('tailsCount').innerText = tailsCount;
+        const total = updateSum();
+        return total;
+    }
+
+    function handleShiftPress() {
+        shiftPressed = true;
+        document.getElementById('shiftButton').style.backgroundColor = 'gray';
+    }
+
+    function handleShiftRelease() {
+        shiftPressed = false;
+        document.getElementById('shiftButton').style.backgroundColor = 'lightgray';
+    }
+
+    function handleLeftPress() {
+        if (!leftPressed && !leftCooldown) {
+            leftPressed = true;
+            leftCooldown = true;
+            document.getElementById('leftButton').style.backgroundColor = 'gray';
+            setTimeout(() => { leftCooldown = false; }, 150); // Cooldown period: 150ms
+            if (shiftPressed) {
+                headsCount = Math.max(headsCount - 1, 0);
+                updateCounts();
+            } else {
+                const total = updateSum();
+                if (total < document.getElementById('maxTotalValue').value) {
+                    headsCount++;
+                    updateCounts();
+                }
+            }
+        }
+    }
+
+    function handleLeftRelease() {
+        leftPressed = false;
+        document.getElementById('leftButton').style.backgroundColor = 'initial';
+    }
+
+    function handleRightPress() {
+        if (!rightPressed && !rightCooldown) {
+            rightPressed = true;
+            rightCooldown = true;
+            document.getElementById('rightButton').style.backgroundColor = 'gray';
+            setTimeout(() => { rightCooldown = false; }, 150); // Cooldown period: 150ms
+            if (shiftPressed) {
+                tailsCount = Math.max(tailsCount - 1, 0);
+                updateCounts();
+            } else {
+                const total = updateSum();
+                if (total < document.getElementById('maxTotalValue').value) {
+                    tailsCount++;
+                    updateCounts();
+                }
+            }
+        }
+    }
+
+    function handleRightRelease() {
+        rightPressed = false;
+        document.getElementById('rightButton').style.backgroundColor = 'initial';
+    }
+
+    document.getElementById('shiftButton').addEventListener('mousedown', handleShiftPress);
+    document.getElementById('shiftButton').addEventListener('mouseup', handleShiftRelease);
+    document.getElementById('leftButton').addEventListener('mousedown', handleLeftPress);
+    document.getElementById('leftButton').addEventListener('mouseup', handleLeftRelease);
+    document.getElementById('rightButton').addEventListener('mousedown', handleRightPress);
+    document.getElementById('rightButton').addEventListener('mouseup', handleRightRelease);
+
+    document.addEventListener('touchstart', function(event) {
+        const targetId = event.target.id;
+        if (targetId === 'shiftButton') {
+            handleShiftPress();
+        } else if (targetId === 'leftButton') {
+            handleLeftPress();
+        } else if (targetId === 'rightButton') {
+            handleRightPress();
+        }
+    });
+
+    document.addEventListener('touchend', function(event) {
+        const targetId = event.target.id;
+        if (targetId === 'shiftButton') {
+            handleShiftRelease();
+        } else if (targetId === 'leftButton') {
+            handleLeftRelease();
+        } else if (targetId === 'rightButton') {
+            handleRightRelease();
+        }
+    });
+
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Shift') {
+            handleShiftPress();
+        } else if (event.key === 'ArrowLeft') {
+            handleLeftPress();
+        } else if (event.key === 'ArrowRight') {
+            handleRightPress();
+        }
+    });
+
+    document.addEventListener('keyup', function(event) {
+        if (event.key === 'Shift') {
+            handleShiftRelease();
+        } else if (event.key === 'ArrowLeft') {
+            handleLeftRelease();
+        } else if (event.key === 'ArrowRight') {
+            handleRightRelease();
+        }
+    });
+
+    document.getElementById('resetButton').addEventListener('click', function() {
+        headsCount = 0;
+        tailsCount = 0;
+        updateCounts();
+    });
+</script>
+
+</body>
+</html>
+
